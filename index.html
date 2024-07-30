@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>セルオートマトン</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin-top: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>セル・オートマトン</h1>
+    <div class="controls">
+        <label for="rule">ルール番号:</label>
+        <input type="number" id="rule" value="30" min="0" max="255">
+        <label for="size">グリッドの大きさ:</label>
+        <input type="number" id="size" value="500">
+        <label for="speed">描画速度 (ms):</label>
+        <input type="number" id="speed" value="10">
+        <button onclick="startAutomaton()">開始</button>
+    </div>
+    <canvas id="canvas" width="1500" height="800"></canvas>
+
+    <script>
+        function startAutomaton() {
+            const rule = parseInt(document.getElementById('rule').value);
+            const size = parseInt(document.getElementById('size').value);
+            const speed = parseInt(document.getElementById('speed').value);
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const cellSize = canvas.width / size;
+            let grid = Array(size).fill(0);
+            grid[Math.floor(size / 2)] = 1;
+
+            const ruleSet = rule.toString(2).padStart(8, '0').split('').map(Number).reverse();
+
+            function drawGrid() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let currentGrid = grid.slice();
+                let y = 0;
+
+                const interval = setInterval(() => {
+                    if (y >= size) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    for (let x = 0; x < size; x++) {
+                        if (currentGrid[x] === 1) {
+                            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                        }
+                    }
+                    currentGrid = nextGeneration(currentGrid, ruleSet);
+                    y++;
+                }, speed);
+            }
+
+            function nextGeneration(grid, ruleSet) {
+                let newGrid = Array(size).fill(0);
+                for (let i = 1; i < size - 1; i++) {
+                    const left = grid[i - 1];
+                    const center = grid[i];
+                    const right = grid[i + 1];
+                    const newState = ruleSet[parseInt('' + left + center + right, 2)];
+                    newGrid[i] = newState;
+                }
+                return newGrid;
+            }
+
+            drawGrid();
+        }
+    </script>
+</body>
+</html>
